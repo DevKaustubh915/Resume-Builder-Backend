@@ -87,4 +87,19 @@ public class AuthService {
                 .build();
     }
 
+    public void verifyEmail(String token){
+        User user = userRepository.findUserByVerificationToken(token)
+                .orElseThrow(()-> new RuntimeException("User not found with token"));
+
+        if (user.getVerificationExpires() != null && user.getVerificationExpires().isBefore(LocalDateTime.now())){
+            throw new RuntimeException("Verification token has expired. Please request new one");
+        }
+
+        user.setEmailVerified(true);
+        user.setVerificationToken(null);
+        user.setVerificationExpires(null);
+        userRepository.save(user);
+
+    }
+
 }
