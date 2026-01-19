@@ -2,6 +2,7 @@ package com.example.resumebuilderapi.exception;
 
 
 import jdk.javadoc.doclet.Reporter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -13,6 +14,7 @@ import org.springframework.web.servlet.View;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -25,6 +27,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationException(
             MethodArgumentNotValidException ex){
+
+        log.info("Inside GlobalExceptionHandler: handlerValidationException()");
+
         Map<String , String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError)error).getField();
@@ -41,6 +46,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceExistException.class)
     public ResponseEntity<Map<String , Object>> handleResourceExistException(ResourceExistException ex){
+
+        log.info("Inside GlobalExceptionHandler: handlerResourceExistException()");
+
         Map<String , Object> reponse = new HashMap<>();
         reponse.put("message" , "Resource exists");
         reponse.put("errors" , ex.getMessage());
@@ -50,6 +58,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String , Object>> handleGenericException(Exception ex){
+
+        log.info("Inside GlobalExceptionHandler: handleGenericException()");
+
         Map<String , Object> reponse = new HashMap<>();
         reponse.put("message" , "Something went wrong . contact administator");
         reponse.put("errors" , ex.getMessage());
