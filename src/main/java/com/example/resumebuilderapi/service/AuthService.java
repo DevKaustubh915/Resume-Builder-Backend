@@ -43,6 +43,9 @@ public class AuthService {
     }
 
     private void sendVerificationEmail(User newUser) {
+
+        log.info("Inside AuthService - sendVerificationEmail():{}", newUser);
+
         try{
             String link  = appBaseUrl+"/api/auth/verify-email?token="+newUser.getVerificationToken();
             String html = "<div style='font-family:sans-serif'>" +
@@ -57,6 +60,7 @@ public class AuthService {
 
             emailService.sendHtmlEmail(newUser.getEmail() , "Verify your email" , html);
         }catch(Exception e){
+            log.error("Exception occured at sendVerificationEmail():{}", e.getMessage());
             throw new RuntimeException("Failed to send verification email "+e.getMessage());
         }
     }
@@ -88,6 +92,9 @@ public class AuthService {
     }
 
     public void verifyEmail(String token){
+
+        log.info("Inside AuthService: verfyEmail():{}", token);
+
         User user = userRepository.findUserByVerificationToken(token)
                 .orElseThrow(()-> new RuntimeException("User not found with token"));
 
