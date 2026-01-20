@@ -2,12 +2,16 @@ package com.example.resumebuilderapi.service;
 
 import com.example.resumebuilderapi.document.User;
 import com.example.resumebuilderapi.dto.AuthResponse;
+import com.example.resumebuilderapi.dto.LoginRequest;
 import com.example.resumebuilderapi.dto.RegisterRequest;
 import com.example.resumebuilderapi.exception.ResourceExistException;
 import com.example.resumebuilderapi.repository.UserRepository;
+import com.example.resumebuilderapi.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,6 +23,9 @@ import java.util.UUID;
 public class AuthService {
     private final UserRepository userRepository;
     private final EmailService emailService;
+
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     @Value("${app.base.url:http://localhost:8080}")
     private String appBaseUrl;
@@ -66,6 +73,7 @@ public class AuthService {
     }
 
     private AuthResponse toResponse(User newUser){
+        log.info("Inside AuthService: toResponse()");
         return AuthResponse.builder()
                 .id(newUser.getId())
                 .name(newUser.getName())
@@ -79,10 +87,11 @@ public class AuthService {
     }
 
     private User toDocument(RegisterRequest request){
+        log.info("Inside AuthService: toDocument()");
         return User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
-                .password(request.getPassword())
+                .password(passwordEncoder.encode(request.getPassword()))
                 .profileImageUrl(request.getProfileImageUrl())
                 .subscriptionPlan("Basic")
                 .emailVerified(false)
@@ -108,5 +117,29 @@ public class AuthService {
         userRepository.save(user);
 
     }
+
+    public AuthResponse login(LoginRequest request){
+        log.info("Inside AuthService: login() {}", request );
+        User existingUser = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(()-> new RuntimeException("Invalid Email or Password"));
+
+        if (!passwordEncoder.matches(request.getPassword() , existingUser.getPassword())){
+            throw new UsernameNotFoundException("Invalid Email or Password");
+
+        }
+
+        if (!existingUser.isEmailVerified()){
+            throw new RuntimeException("Please verify your email before logging in!!!");
+        }
+
+        String token = jwtUtil.generateToken(existingUser.getId());
+
+        AuthResponse response = toResponse(existingUser);
+        response.setToken(token);
+        return response;
+
+    }
+
+
 
 }
