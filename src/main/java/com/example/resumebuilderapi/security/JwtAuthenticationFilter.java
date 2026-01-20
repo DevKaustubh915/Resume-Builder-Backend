@@ -35,17 +35,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = null;
         String userId = null;
 
-        if (authHeader != null && authHeader.startsWith("Bearer")){
+        if (authHeader != null && authHeader.startsWith("Bearer")) {
             token = authHeader.substring(7);
 
-            try{
-                userId=jwtUtil.getUserIdFromToken(token);
+            try {
+                userId = jwtUtil.getUserIdFromToken(token);
 
-            }catch (Exception e){
+            } catch (Exception e) {
                 log.error("Token is not valid/available");
             }
+        }
 
-            if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null){
+        if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null){
                 try{
                     if (jwtUtil.validateToken(token) && !jwtUtil.isTokenExpired(token)){
                         User user =userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
@@ -58,10 +59,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     log.error("Exception occured while validating the token");
 
                 }
-            }
-
-            filterChain.doFilter(request , response);
-
         }
+
+        filterChain.doFilter(request , response);
+
     }
 }
