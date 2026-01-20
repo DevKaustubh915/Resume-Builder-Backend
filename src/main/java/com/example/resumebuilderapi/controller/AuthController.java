@@ -11,11 +11,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.example.resumebuilderapi.util.AppConstants.*;
 
@@ -59,7 +61,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/login")
+    @PostMapping(LOGIN)
 
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request){
         log.info("Inside AuthController: login()");
@@ -72,6 +74,35 @@ public class AuthController {
     public String testValidationToken(){
         log.info("Inside AuthController: testValidationToken()");
         return "Token validation is working";
+    }
+
+    @PostMapping(RESEND_VERIFICATION)
+    public ResponseEntity<?> resendVerification(@RequestBody Map<String,String> body){
+        //step 1: get the mail from request
+        String email = body.get("email");
+
+        //step 2: Add the validations
+        if (Objects.isNull(email)){
+            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
+        }
+
+        //step 3: call the service method to resend verification link
+        authService.resendVerification(email);
+
+        //step  4: return response
+        return ResponseEntity.ok(Map.of("success", true, "message", "Verification email sent"));
+    }
+
+    @GetMapping(PROFILE)
+    public ResponseEntity<?> getProfile(Authentication authentication ){
+        //step 01: get the principle object
+        Object principleObject = authentication.getPrincipal();
+
+        //step 2: call the service method
+        AuthResponse currentProfile = authService.getProfile(principleObject);
+
+        //step 3: return the response
+        return  ResponseEntity.ok(currentProfile);
     }
 
 

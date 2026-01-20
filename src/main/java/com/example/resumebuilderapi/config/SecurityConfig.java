@@ -43,6 +43,7 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/verify-email",
                                 "/api/auth/upload-image",
+                                "/api/auth/resend-verification",
                                 "/actuator/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
